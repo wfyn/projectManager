@@ -3,7 +3,7 @@ server:
 spring:
   datasource:
     druid:
-      url:  jdbc:mysql://localhost:3306/filesystem?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&allowMultiQueries=true&tinyInt1isBit=false&allowLoadLocalInfile=true&allowLocalInfile=true&allowUrlInLocalInfile=true&allowPublicKeyRetrieval=true&allowMultiQueries=true&allowPublicKeyRetrieval=true&allowMultiQueries=true&allowPublicKeyRetrieval=true
+      url:  jdbc:mysql://localhost:3306/filesystem?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&zeroDateTimeBehavior=convertToNull
       username: root
       password: root
       driver-class-name: com.mysql.cj.jdbc.Driver
