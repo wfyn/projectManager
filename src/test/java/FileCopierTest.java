@@ -16,13 +16,13 @@ public class FileCopierTest {
         // 1. 获取指定提交的修改文件列表
         List<String> changedFiles = GitUtil.getChangedFilesViaCLI(
                 "E:\\sudytech\\webpluspro\\webpluspromaster",
-                "b09ac8fd"
+                "b2a86f6e"
         );
         System.out.println("修改的文件:");
         changedFiles.forEach(System.out::println);
 
         // 2. 定义源目录和目标目录
-        Path sourceBaseDir = Paths.get("E:\\sudytech\\webpluspro\\webpluspromaster\\02src\\target\\webpluspro-3.0.7.1");
+        Path sourceBaseDir = Paths.get("E:\\sudytech\\webpluspro\\webpluspromaster\\02src\\target\\webpluspro-3.0.7.2");
         Path outputDir = Paths.get("E:\\sudytech\\patch\\output");
 
         // 确保输出目录存在

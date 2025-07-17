@@ -1,5 +1,6 @@
 package com.sudy.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -16,6 +17,7 @@ import com.sudy.service.AsyncFileTaskService;
 import com.sudy.util.GitUtil;
 import com.sudy.vo.HistoryCommitVO;
 import com.sudy.vo.PageVO;
+import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,7 +49,7 @@ public class FileTaskController {
      * 创建文件处理任务
      */
     @PostMapping("/create")
-    public Result createTask(@RequestBody FileAddDTO FileAddDTO) {
+    public Result createTask(@RequestBody FileAddDTO FileAddDTO) throws IOException {
 
         return Result.ok(asyncFileTaskService.createTask(FileAddDTO));
     }
@@ -55,15 +57,15 @@ public class FileTaskController {
     /**
      * 获取任务列表
      */
-    @PostMapping("/list")
-    public Result listTasks(@RequestBody PageDTO pageDTO) {
+    @GetMapping("/tasks")
+    public Result listTasks() {
 
         QueryWrapper<FileTask> query = new QueryWrapper<>();
 
 
         System.out.println("status");
         query.orderByDesc("created_at");
-        Page<FileTask> fileTaskPage = fileTaskMapper.selectPage(new Page<>(pageDTO.getPage(), pageDTO.getSize()), query);
+        Page<FileTask> fileTaskPage = fileTaskMapper.selectPage(new Page<>(0, 10), query);
 
         System.out.println();
         System.out.println(query.getCustomSqlSegment());
@@ -140,11 +142,24 @@ public class FileTaskController {
     }
 
     //获取仓库列表
-    @GetMapping("/repositories")
-    public Result createRepo() {
+    @PostMapping("/repositories")
+    public Result createRepo(@RequestBody PageDTO pageDTO) {
 
-        List<GitRepository> list = gitRepositoryMapper.selectList(null);
-        return Result.ok(list);
+        LambdaQueryWrapper<GitRepository> wrapper = new LambdaQueryWrapper<>();
+        wrapper.like(StringUtils.isNotBlank(pageDTO.getKeyword()), GitRepository::getRepoName, pageDTO.getKeyword())
+                .or()
+                .like(StringUtils.isNotBlank(pageDTO.getKeyword()), GitRepository::getRepoPath, pageDTO.getKeyword())
+                .or()
+                .like(StringUtils.isNotBlank(pageDTO.getKeyword()), GitRepository::getRemoteUrl, pageDTO.getKeyword());
+
+        Page<GitRepository> page = new Page<>(pageDTO.getPage(), pageDTO.getSize());
+        IPage<GitRepository> resultPage = gitRepositoryMapper.selectPage(page, wrapper);
+
+        PageVO<GitRepository> pageVO = new PageVO<>();
+        pageVO.setList(resultPage.getRecords());
+        pageVO.setTotal(resultPage.getTotal());
+
+        return Result.ok(pageVO);
     }
 
     @PostMapping("/getHistoryList/{id}")

@@ -8,6 +8,8 @@ import lombok.Data;
 @Data
 public class FileAddDTO {
 
+    String repoId;
+
     /**
      * 目标代码仓库的物理路径（绝对路径）
      */

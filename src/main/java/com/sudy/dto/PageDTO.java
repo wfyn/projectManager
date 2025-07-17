@@ -7,4 +7,5 @@ public class PageDTO {
 
     private Integer page;
     private Integer size;
+    private String keyword;
 }

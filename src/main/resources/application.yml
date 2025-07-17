@@ -12,3 +12,9 @@ spring:
       max-active: 20
       max-wait: 60000
       test-on-borrow: true
+logging:
+  level:
+    # 设置根日志级别
+    root: info
+    com.sudy.service: debug
+
