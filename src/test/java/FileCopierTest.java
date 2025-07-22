@@ -14,16 +14,27 @@ public class FileCopierTest {
     @Test
     public void test() throws IOException, InterruptedException {
         // 1. 获取指定提交的修改文件列表
+//        List<String> changedFiles = GitUtil.getChangedFilesViaCLI(
+//                "E:\\sudytech\\webpluspro\\webpluspromaster",
+//                "beaf0131"
+//        );
+//        System.out.println("修改的文件:");
+//        changedFiles.forEach(System.out::println);
+//
+//        // 2. 定义源目录和目标目录
+//        Path sourceBaseDir = Paths.get("E:\\sudytech\\webpluspro\\webpluspromaster\\02src\\target\\webpluspro-3.0.7.2");
+//        Path outputDir = Paths.get("E:\\sudytech\\patch\\output");
+
         List<String> changedFiles = GitUtil.getChangedFilesViaCLI(
-                "E:\\sudytech\\webpluspro\\webpluspromaster",
-                "b2a86f6e"
+                "E:\\sudytech\\webpluspro3.0.7",
+                "beaf0131"
         );
         System.out.println("修改的文件:");
         changedFiles.forEach(System.out::println);
 
         // 2. 定义源目录和目标目录
-        Path sourceBaseDir = Paths.get("E:\\sudytech\\webpluspro\\webpluspromaster\\02src\\target\\webpluspro-3.0.7.2");
-        Path outputDir = Paths.get("E:\\sudytech\\patch\\output");
+        Path sourceBaseDir = Paths.get("E:\\sudytech\\webpluspro3.0.7\\02src\\target\\webpluspro-3.0.6.2");
+        Path outputDir = Paths.get("E:\\sudytech\\patch1\\output");
 
         // 确保输出目录存在
         if (!Files.exists(outputDir)) {
