@@ -1,40 +1,88 @@
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sudy.util.GitUtil;
-import org.apache.el.parser.AstFalse;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class FileCopierTest {
 
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+
     @Test
     public void test() throws IOException, InterruptedException {
-        // 1. 获取指定提交的修改文件列表
-//        List<String> changedFiles = GitUtil.getChangedFilesViaCLI(
-//                "E:\\sudytech\\webpluspro\\webpluspromaster",
-//                "beaf0131"
-//        );
-//        System.out.println("修改的文件:");
-//        changedFiles.forEach(System.out::println);
-//
-//        // 2. 定义源目录和目标目录
-//        Path sourceBaseDir = Paths.get("E:\\sudytech\\webpluspro\\webpluspromaster\\02src\\target\\webpluspro-3.0.7.2");
-//        Path outputDir = Paths.get("E:\\sudytech\\patch\\output");
+        executeCopy("5.0.1.5");
+    }
 
+
+    /**
+     * 加载指定版本的配置
+     *
+     * @param version 版本号，如 "5.0.1.5"
+     */
+    private Config loadConfig(String version) throws IOException {
+        List<Map<String, Config>> configList = loadConfigList();
+
+        for (Map<String, Config> map : configList) {
+            if (map.containsKey(version)) {
+                return map.get(version);
+            }
+        }
+
+        throw new IllegalArgumentException("找不到版本配置: " + version);
+    }
+
+    /**
+     * 加载完整配置列表
+     */
+    private List<Map<String, Config>> loadConfigList() throws IOException {
+        // 优先从外部文件加载
+        Path externalConfig = Paths.get("config.json");
+        if (Files.exists(externalConfig)) {
+            return objectMapper.readValue(externalConfig.toFile(), new TypeReference<List<Map<String, Config>>>() {
+            });
+        }
+
+        // 从 classpath 加载
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("config.json")) {
+            if (is == null) {
+                throw new IOException("找不到配置文件: config.json");
+            }
+            return objectMapper.readValue(is, new TypeReference<List<Map<String, Config>>>() {
+            });
+        }
+    }
+
+
+    /**
+     * 执行文件复制
+     */
+    private void executeCopy(String version) throws IOException, InterruptedException {
+        // 加载指定版本配置
+        Config config = loadConfig(version);
+        System.out.println("当前版本: " + version);
+        System.out.println("配置信息: " + config);
+
+        // 1. 获取 Git 变更文件
         List<String> changedFiles = GitUtil.getChangedFilesViaCLI(
-                "E:\\sudytech\\webpluspro3.0.7",
-                "beaf0131"
+                config.getProjectPath(),
+                config.getCommitHash()
         );
         System.out.println("修改的文件:");
         changedFiles.forEach(System.out::println);
 
         // 2. 定义源目录和目标目录
-        Path sourceBaseDir = Paths.get("E:\\sudytech\\webpluspro3.0.7\\02src\\target\\webpluspro-3.0.6.2");
-        Path outputDir = Paths.get("E:\\sudytech\\patch1\\output");
+        Path sourceBaseDir = Paths.get(config.getSourceBaseDir());
+        Path outputDir = Paths.get(config.getOutputDir());
 
         // 确保输出目录存在
         if (!Files.exists(outputDir)) {
@@ -43,20 +91,14 @@ public class FileCopierTest {
 
         // 3. 处理每个修改文件
         for (String filePath : changedFiles) {
-            // 提取编译后文件的可能位置
             List<Path> compiledPaths = findCompiledPaths(filePath, sourceBaseDir);
 
-            // 复制找到的编译文件
             for (Path compiledPath : compiledPaths) {
                 if (Files.exists(compiledPath)) {
-                    // 在输出目录保持相同的相对路径结构
                     Path relativePath = sourceBaseDir.relativize(compiledPath);
                     Path destination = outputDir.resolve(relativePath);
 
-                    // 确保目标目录存在
                     Files.createDirectories(destination.getParent());
-
-                    // 复制文件
                     Files.copy(compiledPath, destination, StandardCopyOption.REPLACE_EXISTING);
                     System.out.println("已复制: " + compiledPath + " -> " + destination);
                 } else {
@@ -132,8 +174,58 @@ public class FileCopierTest {
 
         return compiledPaths;
     }
-    @Test
-    public void test1() throws IOException, GitAPIException, InterruptedException {
-        System.out.println(GitUtil.getFormattedCommits("E:\\sudytech\\webpluspro\\webpluspromaster", 20, false));
+
+
+    /**
+     * 配置类，对应 config.json 结构
+     */
+    public static class Config {
+        private String projectPath;      // Git 项目路径
+        private String commitHash;      // Git commit hash
+        private String sourceBaseDir;   // 编译文件源目录
+        private String outputDir;       // 输出目录
+
+        // Getters and Setters
+        public String getProjectPath() {
+            return projectPath;
+        }
+
+        public void setProjectPath(String projectPath) {
+            this.projectPath = projectPath;
+        }
+
+        public String getCommitHash() {
+            return commitHash;
+        }
+
+        public void setCommitHash(String commitHash) {
+            this.commitHash = commitHash;
+        }
+
+        public String getSourceBaseDir() {
+            return sourceBaseDir;
+        }
+
+        public void setSourceBaseDir(String sourceBaseDir) {
+            this.sourceBaseDir = sourceBaseDir;
+        }
+
+        public String getOutputDir() {
+            return outputDir;
+        }
+
+        public void setOutputDir(String outputDir) {
+            this.outputDir = outputDir;
+        }
+
+        @Override
+        public String toString() {
+            return "Config{" +
+                    "projectPath='" + projectPath + '\'' +
+                    ", commitHash='" + commitHash + '\'' +
+                    ", sourceBaseDir='" + sourceBaseDir + '\'' +
+                    ", outputDir='" + outputDir + '\'' +
+                    '}';
+        }
     }
 }
