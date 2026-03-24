@@ -52,3 +52,14 @@
     --data '{
     "resType": "teacherHome"
     }'
+
+
+
+复旦大学 vpn
+te.sslvpn.fudan.edu.cn
+VPNWebplus1
+Wvpm$8khdd0l@Tyn！
+
+IP：10.153.170.53
+用户：vmadmin
+密码：xeQebg62uc_V
