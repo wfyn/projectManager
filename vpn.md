@@ -22,6 +22,10 @@
 
 * 北化服务器信息 
 
+https://202.4.128.50:1443/prx/000/http/localhost/login/index.html
+
+menhunew4
+
     制作服务器（新教师个人主页）
     121.195.148.203
     liusm
@@ -44,6 +48,9 @@
     
     121.195.148.195 AI门户-应用2
     root/ai08!QAZ#Buct 
+    
+    121.195.132.9
+    yough/wz01!QAZ#Buct/js05!QAZ#Buct(新)  sudo su - root 切换root用户
 
 删记录命令
 
@@ -63,3 +70,15 @@ Wvpm$8khdd0l@Tyn！
 IP：10.153.170.53
 用户：vmadmin
 密码：xeQebg62uc_V
+
+
+
+南通大学
+
+c.v.ntu.edu.cn 端口：443 单点登入（EnUES客户端）
+sudi
+Sudy@123
+
+5110620  Ntdx@sudy01
+http://webs.ntu.edu.cn/login.jsp?inner=1
+sudi  sudi#2019

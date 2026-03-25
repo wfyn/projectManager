@@ -20,7 +20,7 @@ public class FileCopierTest {
 
     @Test
     public void test() throws IOException, InterruptedException {
-        executeCopy("2.0.8.5.1");
+        executeCopy("5.0.1.5");
     }
 
 
