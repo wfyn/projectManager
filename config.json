@@ -14,5 +14,13 @@
       "sourceBaseDir": "F:\\sudytech\\webpluspro\\2.0.8.5.1\\02src\\target\\webpluspro-2.0.8.5.1",
       "outputDir": "F:\\sudytech\\outClass\\fudan\\v1\\ROOT"
     }
+  } ,
+  {
+    "3.0.8": {
+      "projectPath": "F:\\sudytech\\webpluspro\\3.0.8",
+      "commitHash": "b8b740c9",
+      "sourceBaseDir": "F:\\sudytech\\webpluspro\\3.0.8\\02src\\target\\webpluspro-3.0.8",
+      "outputDir": "F:\\sudytech\\outClass\\safeCener\\v2\\ROOT"
+    }
   }
 ]
