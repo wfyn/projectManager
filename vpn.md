@@ -17,6 +17,8 @@
       服务器密码
       ubuntu/nju@12345
       sudo su  (输入上面ubuntu用户密码)
+* 17768227072
+  kz$2dru4CC12
 
   
 
@@ -54,7 +56,7 @@ menhunew4
 
 删记录命令
 
-    curl --location --request POST 'http://10.28.129.84:9502/v1/mgr/article/del' \
+    curl --location --request POST 'http://121.195.149.8:31144/v1/mgr/article/del' \
     --header 'Content-Type: application/json' \
     --data '{
     "resType": "teacherHome"
