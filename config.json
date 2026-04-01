@@ -2,9 +2,9 @@
   {
     "5.0.1.5": {
       "projectPath": "F:\\sudytech\\webpluspro\\5.0.1.5",
-      "commitHash": "aa48fa87",
+      "commitHash": "30572f40",
       "sourceBaseDir": "F:\\sudytech\\webpluspro\\5.0.1.5\\02src\\target\\webpluspro-5.0.1.5",
-      "outputDir": "F:\\sudytech\\outClass\\zju\\v2\\ROOT"
+      "outputDir": "F:\\sudytech\\outClass\\zju\\v3\\ROOT"
     }
   },
   {
@@ -18,9 +18,9 @@
   {
     "3.0.8": {
       "projectPath": "F:\\sudytech\\webpluspro\\3.0.8",
-      "commitHash": "b8b740c9",
+      "commitHash": "951332c6",
       "sourceBaseDir": "F:\\sudytech\\webpluspro\\3.0.8\\02src\\target\\webpluspro-3.0.8",
-      "outputDir": "F:\\sudytech\\outClass\\safeCener\\v2\\ROOT"
+      "outputDir": "F:\\sudytech\\outClass\\safeCener\\v6\\ROOT"
     }
   }
 ]
