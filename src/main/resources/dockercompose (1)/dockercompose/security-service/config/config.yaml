@@ -1,0 +1,26 @@
+port: 9606
+clientName: mpk
+nats:
+  account:
+    cm:
+      seed: "SUAG5FS7H253CMJBZFATMT4E4CLPA22AX37DBUAGF3JPK4EJ7TQ7LBQ4LM"
+      nkey: "UBUGBPDHPW44AA4I6YNUDJ4GFRSMNJFNMU64BMBJTQDXLLACII5CSXTP"
+      password: ""
+      username: ""
+  consumer: ""
+  defaultAccountName: cm
+  endpoint: nats://nats:4222 #nats://nats.nats.svc.cluster.local
+  monitorEndpoint: ""
+  stream: ""
+articleServer:
+  host: http://webplus-push-badger:9703
+  appId: media
+  privateKey: U2FsdGVkX19spjXVHO0eELPdZEj7RqC
+scanWorkerCount: 2
+verifyWorkerCount: 8    
+tokServer:
+  host: http://security-tok-api:8080
+simMatchServer:
+  host: http://similar-service:3000
+convertServer:
+  host: http://security_convert_html:9607

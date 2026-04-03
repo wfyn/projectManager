@@ -1,0 +1,62 @@
+clientName: mpk
+port: 9703
+pushModule:
+  webplus:
+    open: true
+    appName: "{clientName}-webplus"
+    mediaResAppName: "mediares"  #附件推送的appName
+    pushImpl: ["badger"]
+    hasPublishServer: true #是否有发布服务器，如果是false，所有访问地址将会有psp结尾
+    domainName : "http://192.168.50.30:8087" #指定域名，如果没有发布服务器，可以指定域名拼接文章地址.最后不要加 /
+    pushThirdConf: #推送主题，让第三方消费
+      - natsStreamName: "webplus_ai_server_retrieval"
+        subjectName: "sudy.webplus-ai-server.retrieval.{sourceType}"
+  mediares:
+    open: true
+    appName: "{clientName}-mediares"
+    pushImpl: ["nats"]
+    hasPublishServer: false #是否有发布服务器，如果是false，所有访问地址将会有psp结尾
+    domainName : "http://192.168.50.30:8087" #指定域名，如果没有发布服务器，可以指定域名拼接文章地址.最后不要加 /
+    pushThirdConf: #推送第三方nats配置
+      - natsStreamName: "mediares_push_stream"
+        subjectName: "sudy.ai.req.{clientName}.bizCall.cmqa3.mediares"
+thirdPushModule:
+  open: false #是否开启第三方消费
+  natsStreamName: "webplus_ai_server-third_push_stream" #第三方推送的stream名
+  natsConsumerName: "webplus_ai_server-third_consumer" #给第三方stream绑定的消费者名
+  subjectName: "sudy.webplus-ai-server.notify.{clientName}.third-push.xxx" #第三方消费主题
+
+nats:
+  endpoint: nats://nats:4222 #nats://127.0.0.1:42222
+  defaultAccountName: cm
+  account:
+    cm:
+      seed: "SUAG5FS7H253CMJBZFATMT4E4CLPA22AX37DBUAGF3JPK4EJ7TQ7LBQ4LM"
+      nkey: "UBUGBPDHPW44AA4I6YNUDJ4GFRSMNJFNMU64BMBJTQDXLLACII5CSXTP"
+  stream:
+    name: "webplus_ai_server_badger" #第三方推送的stream名
+    subject: "sudy.webplus-ai-badger.notify.{clientName}.core.>" #第三方消费主题
+mysql:
+  logLevel: "all"
+  local:
+    host: 192.168.50.30
+    port: 3306
+    username: root
+    password: "root"
+    database: ai-push-server
+    maxConnections: 100
+    tableNameLow: false
+  webplus:
+    host: 192.168.50.30
+    port: 3306
+    username: root
+    password: "root"
+    database: webplusmaster
+    maxConnections: 100
+    tableNameLow: false
+webplus:
+  checkType: "noLimit" # 站点栏目验证模式：3、内容中台验证
+  checkCCSite: false #是否检查内容中台站点
+  checkCCColumn: false #是否检查内容中台栏目
+thirdServer:
+  fileReadUrl: "http://attachment-parsing:9345/read" #附件读取服务地址

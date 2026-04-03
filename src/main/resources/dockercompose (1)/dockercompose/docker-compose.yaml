@@ -1,0 +1,104 @@
+version: '3.3'
+
+services:
+  # 1.  security-service 服务
+  security-service:
+    image: hub.sudytech.cn/webplus/security-service:1.0.4
+    container_name: security-service
+    pull_policy: always
+    ports:
+      - "9606:9606"
+    volumes:
+      - ./security-service/config/config.yaml:/app/etc/config.yaml  # 挂载本地网站文件
+      - ./security-service/data/:/app/data/ # 挂载本地网站文件
+      - ./security-service/logs/:/app/logs/  # 挂载本地网站文件'
+      - ./security-service/dict/:/app/dict/
+    depends_on:
+      - webplus-push-badger                       # 依赖数据库服务
+      - security-tok-api
+      - similar-service 
+      - security_convert_html  
+    networks:
+      - app-network
+    restart: unless-stopped      # 自动重启策略
+
+  # 2. 网站群推送服务
+  webplus-push-badger:
+    image: hub.sudytech.cn/webplus/webplus-push-badger:1.0.0
+    container_name: webplus-push-badger
+    depends_on:
+      - attachment-parsing
+    pull_policy: always
+    ports:
+      - "9703:9703"
+    volumes:
+      - ./webplus-push-badger/config/config.yaml:/app/etc/config.yaml
+      - ./webplus-push-badger/logs/:/app/logs/
+      - ./webplus-push-badger/data/:/app/etc/data_webplus/
+    networks:
+      - app-network
+    restart: unless-stopped
+  # 3. 附件抓取服务
+  attachment-parsing:
+    image: hub.sudytech.cn/webplus/attachment-parsing:1.1
+    container_name: attachment-parsing
+    ports:
+      - "9346:9345"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # 4. 分词服务
+  security-tok-api:
+    image: hub.sudytech.cn/webplus/security-tok-api:latest
+    container_name: security-tok-api
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    restart: unless-stopped
+  # 5. nats
+#  nats:
+#    image: hub.sudytech.cn/library/nats:2.10.23-alpine
+#    container_name: nats
+#    ports:
+#      - "4222:4222"
+#    volumes:
+#      - ./nats/nats.conf:/etc/nats/nats-server.conf
+#      - ./nats/data:/data
+#    networks:
+#      - app-network
+#    restart: always
+  #6
+  similar-service:
+    image: hub.sudytech.cn/webplus/similarity_engine_service:0.1.2
+    container_name: similar-service
+    ports:
+      - "13000:3000"
+    volumes:
+      - ./similar-service/data:/app/data
+    networks:
+      - app-network
+    restart: always
+  # 7解析文章内容  
+  security_convert_html:
+    image: hub.sudytech.cn/webplus/security-convert-html:1.0.0
+    container_name: security_convert_html
+    privileged: true
+    volumes:
+      - ./security-convert-html/logs/:/app/logs/
+      - ./security-convert-html/config/config.yaml:/app/etc/config.yaml
+    command: make
+    restart: always
+    networks:
+      - app-network  
+
+# 数据卷定义（持久化存储）
+volumes:
+  db-data:
+    driver: local
+
+# 网络定义（服务间通信）
+networks:
+  app-network:
+    driver: bridge

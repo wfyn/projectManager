@@ -1,0 +1,48 @@
+server:
+  port: 3000
+db:
+  host: 170.18.9.206
+  port: 30337
+  username: root
+  password: Sudy.web123
+  database: cmplus_face
+  maxConnections: 100
+  debug: false
+milvus:
+  host: 170.18.9.106:19530
+  username: root
+  password: ehncf2000
+  dbname: cmplus_image
+image_nats:
+  endpoint: nats://170.18.9.206:30042
+  subject: "sudy.ai.req.{clientId}.>"
+  notifySubject: "sudy.ai.req.{clientId}.bizCall.cmqa3.mediares"
+  streamName: "mediares_push_stream"
+  consumerName: "cm_ai_images_proc_consumer"
+  notifyTagSubject: "sudy.ai.notify.{clientId}.imagesProc.tagProcess"  # 处理标签主题
+  streamTagName: "cm_ai_tag_stream"
+  consumerTagName: "cm_ai_images_tag_consumer"  # 处理标签消费者
+  clientId: "dreamertest-sudy"
+  defaultAccountName: ai
+  account:
+    ai:
+      seed: "SUALYLXTW3VONXS6GIQWYJ5O4KMJXWGWCYQ5OQCZY5YCDN3S4L465R7GE4"
+      nkey: "UDLC45BBO7JJEAQLD3FPHUQG6S6NVAXBOUU3IXPMMOW7ID75JWR5WD4V"
+ai_parma:
+  api_base_url: "http://170.18.10.31:8070"
+  face_width_min: 110
+  face_height_min: 110
+descriptionCount: 100
+minio:
+  access_key: "minioadmin"
+  secret_key: "minioadmin"
+  endpoint: "170.18.9.106:9000"
+  bucket_name: "facial-features"
+reverse_image_config:
+  model_path: "./resnet50_features.onnx"
+  input_width: 224
+  input_height: 224
+  num_channels: 3
+  output_features: 2048
+  max_upload_size: 10
+  session_pool_size: 4

@@ -84,3 +84,19 @@ Sudy@123
 5110620  Ntdx@sudy01
 http://webs.ntu.edu.cn/login.jsp?inner=1
 sudi  sudi#2019
+
+南京中医药
+
+http://10.20.21.53:8080/contentcenter/login.jsp     admin/eT^NdbfUxy3X           南中医
+10.20.21.53   3307  root/Sudy.web123
+
+新算力：
+10.20.21.53
+用户名：sysadmin
+密码：asdf1234
+
+su - root
+mhai@1031
+
+旧10.10.10.38:3306      WEBPLUS   sudy     njzyy12344 10.10.10.38   root Sudy@)!(85811936
+新10.10.10.31:3306      WEBPLUS    sudy     njzyy12344
