@@ -12,6 +12,11 @@ spring:
       max-active: 20
       max-wait: 60000
       test-on-borrow: true
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=3600s
+
 logging:
   level:
     # 设置根日志级别

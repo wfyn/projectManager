@@ -19,8 +19,11 @@ import com.sudy.vo.HistoryCommitVO;
 import com.sudy.vo.PageVO;
 import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 
@@ -28,47 +31,45 @@ import java.util.List;
 @RequestMapping("/api")
 @CrossOrigin
 public class FileTaskController {
-    @Autowired
     private final AsyncFileTaskService asyncFileTaskService;
+    private final FileTaskMapper fileTaskMapper;
+    private final FileDetailMapper fileDetailMapper;
+    private final GitRepositoryMapper gitRepositoryMapper;
 
     @Autowired
-    public FileTaskController(AsyncFileTaskService asyncFileTaskService) {
+    public FileTaskController(AsyncFileTaskService asyncFileTaskService,
+                              FileTaskMapper fileTaskMapper,
+                              FileDetailMapper fileDetailMapper,
+                              GitRepositoryMapper gitRepositoryMapper) {
         this.asyncFileTaskService = asyncFileTaskService;
+        this.fileTaskMapper = fileTaskMapper;
+        this.fileDetailMapper = fileDetailMapper;
+        this.gitRepositoryMapper = gitRepositoryMapper;
     }
-
-    @Autowired
-    private FileTaskMapper fileTaskMapper;
-
-    @Autowired
-    private FileDetailMapper fileDetailMapper;
-
-    @Autowired
-    private GitRepositoryMapper gitRepositoryMapper;
 
     /**
      * 创建文件处理任务
      */
     @PostMapping("/create")
-    public Result createTask(@RequestBody FileAddDTO FileAddDTO) throws IOException {
-
-        return Result.ok(asyncFileTaskService.createTask(FileAddDTO));
+    @CacheEvict(value = {"tasks"}, allEntries = true)
+    public Result createTask(@Valid @RequestBody FileAddDTO fileAddDTO) {
+        try {
+            return Result.ok(asyncFileTaskService.createTask(fileAddDTO));
+        } catch (IOException e) {
+            return Result.error("创建任务失败: " + e.getMessage());
+        }
     }
 
     /**
      * 获取任务列表
      */
     @GetMapping("/tasks")
+    @Cacheable(value = "tasks", key = "'list'")
     public Result listTasks() {
 
         QueryWrapper<FileTask> query = new QueryWrapper<>();
-
-
-        System.out.println("status");
         query.orderByDesc("created_at");
         Page<FileTask> fileTaskPage = fileTaskMapper.selectPage(new Page<>(0, 10), query);
-
-        System.out.println();
-        System.out.println(query.getCustomSqlSegment());
         List<FileTask> records = fileTaskPage.getRecords();
 
         records.forEach(task -> {
@@ -88,6 +89,7 @@ public class FileTaskController {
      * 获取任务详情
      */
     @GetMapping("/{id}")
+    @Cacheable(value = "tasks", key = "#id")
     public Result getTaskDetail(@PathVariable Long id) {
         FileTask task = fileTaskMapper.selectById(id);
         if (task != null) {
@@ -99,9 +101,27 @@ public class FileTaskController {
     }
 
     /**
+     * 删除任务
+     */
+    @DeleteMapping("/tasks/{id}")
+    @CacheEvict(value = {"tasks"}, allEntries = true)
+    public Result deleteTask(@PathVariable Long id) {
+        FileTask task = fileTaskMapper.selectById(id);
+        if (task == null) {
+            return Result.ok("任务不存在");
+        }
+        // 先删除关联的文件明细
+        fileDetailMapper.delete(new QueryWrapper<FileDetail>().eq("task_id", id));
+        // 再删除任务
+        fileTaskMapper.deleteById(id);
+        return Result.ok("删除成功");
+    }
+
+    /**
      * 重新执行任务
      */
     @PostMapping("/{id}/retry")
+    @CacheEvict(value = {"tasks"}, allEntries = true)
     public Result retryTask(@PathVariable Long id) {
         FileTask task = fileTaskMapper.selectById(id);
         if (task == null) {
@@ -163,9 +183,16 @@ public class FileTaskController {
     }
 
     @PostMapping("/getHistoryList/{id}")
-    public Result getHistoryList(@PathVariable Long id) throws IOException, InterruptedException {
-
-        List<HistoryCommitVO> list = GitUtil.getFormattedCommits(gitRepositoryMapper.selectById(id).getRepoPath(), 10, true);
-        return Result.ok(list);
+    public Result getHistoryList(@PathVariable Long id) {
+        try {
+            GitRepository repo = gitRepositoryMapper.selectById(id);
+            if (repo == null) {
+                return Result.error("仓库不存在");
+            }
+            List<HistoryCommitVO> list = GitUtil.getFormattedCommits(repo.getRepoPath(), 10, true);
+            return Result.ok(list);
+        } catch (Exception e) {
+            return Result.error("获取提交历史失败: " + e.getMessage());
+        }
     }
 }

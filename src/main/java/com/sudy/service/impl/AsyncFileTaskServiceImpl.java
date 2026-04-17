@@ -31,13 +31,15 @@ public class AsyncFileTaskServiceImpl implements AsyncFileTaskService {
 
     private final FileTaskMapper fileTaskMapper;
     private final FileDetailMapper fileDetailMapper;
-    @Autowired
-    private GitRepositoryMapper gitRepositoryMapper;
+    private final GitRepositoryMapper gitRepositoryMapper;
 
     @Autowired
-    public AsyncFileTaskServiceImpl(FileTaskMapper fileTaskMapper, FileDetailMapper fileDetailMapper) {
+    public AsyncFileTaskServiceImpl(FileTaskMapper fileTaskMapper,
+                                    FileDetailMapper fileDetailMapper,
+                                    GitRepositoryMapper gitRepositoryMapper) {
         this.fileTaskMapper = fileTaskMapper;
         this.fileDetailMapper = fileDetailMapper;
+        this.gitRepositoryMapper = gitRepositoryMapper;
     }
 
     @Override
@@ -47,13 +49,30 @@ public class AsyncFileTaskServiceImpl implements AsyncFileTaskService {
         GitRepository gitRepository = gitRepositoryMapper.selectById(fileAddDTO.getRepoId());
         String webplusVersion = gitRepository.getWebplusVersion();
         String repoPath = gitRepository.getRepoPath();
-        String sourcePath = gitRepository.getRepoPath() + "\\02src\\target\\webpluspro-" + webplusVersion;
+        String sourcePath;
+        if (fileAddDTO.getSourcePath() != null && !fileAddDTO.getSourcePath().trim().isEmpty()) {
+            sourcePath = fileAddDTO.getSourcePath().trim();
+        } else {
+            sourcePath = gitRepository.getRepoPath() + "\\02src\\target\\webpluspro-" + webplusVersion;
+        }
+        
+        // 优先使用前端传参的生成路径，否则使用仓库默认路径
+        String baseGeneratedPath;
+        if (fileAddDTO.getGeneratedPath() != null && !fileAddDTO.getGeneratedPath().trim().isEmpty()) {
+            baseGeneratedPath = fileAddDTO.getGeneratedPath().trim();
+        } else {
+            baseGeneratedPath = gitRepository.getGeneratedPath();
+        }
+        
+        // 生成唯一目录（如果重复执行，添加 v1/ROOT, v2/ROOT 等）
+        String generatedPath = generateUniquePath(baseGeneratedPath, fileAddDTO.getRepoId(), fileAddDTO.getCommitHash());
+        
         // 创建任务记录
         FileTask task = new FileTask();
         task.setRepoPath(repoPath);
         task.setSourcePath(sourcePath);
         task.setCommitHash(fileAddDTO.getCommitHash());
-        task.setGeneratedPath(gitRepository.getGeneratedPath());
+        task.setGeneratedPath(generatedPath);
 
         task.setStatus("PENDING");
         task.setCreatedAt(new Date());
@@ -71,26 +90,33 @@ public class AsyncFileTaskServiceImpl implements AsyncFileTaskService {
 
 
         Path sourceBaseDir = Paths.get(sourcePath);
+        log.info("源目录基路径: {}", sourceBaseDir);
+        
         // 3. 处理每个修改文件
         for (String filePath : changedFiles) {
-            // 提取编译后文件的可能位置
-            List<Path> compiledPaths = findCompiledPaths(filePath, sourceBaseDir);
-            for (Path compiledPath : compiledPaths) {
-                String compiledPathStr = compiledPath.toString();
-
+            // 提取编译后的相对路径
+            List<String> relativePaths = findRelativePaths(filePath);
+            log.info("Git文件: {}, 相对路径: {}", filePath, relativePaths);
+            for (String relativePath : relativePaths) {
                 FileDetail detail = new FileDetail();
                 detail.setTaskId(task.getId());
                 detail.setFileSourcePath(filePath);
-                detail.setFileCompiledPath(compiledPathStr);
+                detail.setFileCompiledPath(relativePath);
                 detail.setFileType(determineFileType(filePath));
                 fileDetailMapper.insert(detail);
-                log.info("处理文件: {}", filePath);
+                log.info("记录文件详情: source={}, relative={}", filePath, relativePath);
             }
         }
+
+        // ✅ 立即异步执行任务（通过 self 代理调用，避免 @Async 自调用失效）
+        executeTask(task.getId());
 
         return task;
     }
 
+    /**
+     * 立即执行任务（由 createTask 通过 self 代理调用，确保 @Async 生效）
+     */
     @Async("fileTaskExecutor")
     @Override
     public void executeTask(Long taskId) {
@@ -110,13 +136,19 @@ public class AsyncFileTaskServiceImpl implements AsyncFileTaskService {
                     new QueryWrapper<FileDetail>().eq("task_id", taskId)
             );
 
+            log.info("任务 {}: 共 {} 个文件需要处理", taskId, details.size());
+
             // 规范化路径处理
             Path sourceBasePath = Paths.get(task.getSourcePath()).normalize();
             Path outputBasePath = Paths.get(task.getGeneratedPath()).normalize();
+            
+            log.info("源目录: {}", sourceBasePath);
+            log.info("目标目录: {}", outputBasePath);
 
             // 确保输出目录存在
             if (!Files.exists(outputBasePath)) {
                 Files.createDirectories(outputBasePath);
+                log.info("已创建输出目录: {}", outputBasePath);
             }
 
             int successCount = 0;
@@ -132,6 +164,9 @@ public class AsyncFileTaskServiceImpl implements AsyncFileTaskService {
                     Path sourceFile = sourceBasePath.resolve(compiledPath).normalize();
                     Path destFile = outputBasePath.resolve(compiledPath).normalize();
 
+                    log.debug("源文件路径: {}", sourceFile);
+                    log.debug("目标文件路径: {}", destFile);
+
                     // 安全检查：防止路径遍历攻击
                     if (!sourceFile.startsWith(sourceBasePath) || !destFile.startsWith(outputBasePath)) {
                         throw new SecurityException("非法路径访问: " + compiledPath);
@@ -144,6 +179,7 @@ public class AsyncFileTaskServiceImpl implements AsyncFileTaskService {
                         // 复制文件
                         Files.copy(sourceFile, destFile, StandardCopyOption.REPLACE_EXISTING);
                         successCount++;
+                        log.info("复制成功: {} -> {}", sourceFile, destFile);
                     } else {
                         String msg = "源文件不存在: " + sourceFile;
                         log.warn(msg);
@@ -176,42 +212,7 @@ public class AsyncFileTaskServiceImpl implements AsyncFileTaskService {
         }
     }
 
-    /**
-     * 保存文件详情
-     */
 
-    private void saveFileDetails(Long taskId, List<String> changedFiles) {
-        List<FileDetail> details = changedFiles.stream().map(filePath -> {
-            FileDetail detail = new FileDetail();
-            detail.setTaskId(taskId);
-            detail.setFileSourcePath(filePath);
-            detail.setFileCompiledPath(resolveCompiledPath(filePath));
-            detail.setFileType(determineFileType(filePath));
-            return detail;
-        }).collect(Collectors.toList());
-
-        details.forEach(fileDetailMapper::insert);
-    }
-
-    /**
-     * 解析编译后文件路径
-     */
-
-    private String resolveCompiledPath(String filePath) {
-        String normalizedPath = filePath.replace("\\", "/");
-
-        if (normalizedPath.contains("src/main/java/") && normalizedPath.endsWith(".java")) {
-            return normalizedPath
-                    .replaceFirst("^.*src/main/java/", "")
-                    .replace(".java", ".class");
-        } else if (normalizedPath.contains("src/main/webapp/")) {
-            return normalizedPath.replaceFirst("^.*src/main/webapp/", "");
-        } else if (normalizedPath.endsWith(".properties") || normalizedPath.contains("src/main/resources/")) {
-            return normalizedPath.replaceFirst("^.*src/main/resources/", "");
-        }
-
-        return normalizedPath;
-    }
 
     /**
      * 确定文件类型
@@ -292,5 +293,65 @@ public class AsyncFileTaskServiceImpl implements AsyncFileTaskService {
             }
         }
         return compiledPaths;
+    }
+    
+    /**
+     * 计算编译后文件的相对路径（用于存储到数据库）
+     * 处理 Java 文件、JSP 文件和配置文件
+     */
+    private List<String> findRelativePaths(String originalPath) {
+        List<String> relativePaths = new ArrayList<>();
+        if (originalPath == null || originalPath.trim().isEmpty()) {
+            return relativePaths;
+        }
+        
+        String normalized = originalPath.replace("\\", "/");
+
+        // Java文件 -> WEB-INF/classes/xxx/xxx.class
+        if (normalized.contains("src/main/java/") && normalized.endsWith(".java")) {
+            String classPath = normalized
+                    .replaceFirst(".*src/main/java/", "WEB-INF/classes/")
+                    .replace(".java", ".class");
+            relativePaths.add(classPath);
+        }
+        // JSP文件 -> 直接复制，保持相对路径
+        else if (normalized.contains("src/main/webapp/")) {
+            String relativePath = normalized.replaceFirst(".*src/main/webapp/", "");
+            relativePaths.add(relativePath);
+        }
+        // 配置文件 -> WEB-INF/classes/xxx
+        else if (normalized.endsWith(".properties") || normalized.endsWith(".xml") || normalized.contains("src/main/resources/")) {
+            String relativePath = normalized.replaceFirst(".*src/main/resources/", "WEB-INF/classes/");
+            relativePaths.add(relativePath);
+        }
+
+        return relativePaths;
+    }
+    
+    /**
+     * 生成唯一路径：如果同一仓库+commit的任务已存在，添加 v1/, v2/ 等前缀
+     */
+    private String generateUniquePath(String basePath, String repoId, String commitHash) {
+        // 查询该仓库+commit已执行过多少次
+        Long count = Long.valueOf(fileTaskMapper.selectCount(new QueryWrapper<FileTask>()
+                .eq("repo_path", getRepoPathById(repoId))
+                .eq("commit_hash", commitHash)));
+        
+        if (count == null || count == 0) {
+            return basePath;
+        }
+        
+        // 获取基础路径的父目录和最后一级目录名
+        Path base = Paths.get(basePath);
+        Path parent = base.getParent();
+        String dirName = base.getFileName().toString();
+        
+        // 生成 v1, v2, v3... 目录
+        return parent.resolve("v" + (count + 1)).resolve(dirName).toString();
+    }
+    
+    private String getRepoPathById(String repoId) {
+        GitRepository repo = gitRepositoryMapper.selectById(repoId);
+        return repo != null ? repo.getRepoPath() : null;
     }
 }

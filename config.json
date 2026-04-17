@@ -2,25 +2,33 @@
   {
     "5.0.1.5": {
       "projectPath": "F:\\sudytech\\webpluspro\\5.0.1.5",
-      "commitHash": "30572f40",
+      "commitHash": "4419b492",
       "sourceBaseDir": "F:\\sudytech\\webpluspro\\5.0.1.5\\02src\\target\\webpluspro-5.0.1.5",
-      "outputDir": "F:\\sudytech\\outClass\\zju\\v3\\ROOT"
+      "outputDir": "F:\\sudytech\\outClass\\zju\\v4\\ROOT"
     }
   },
   {
     "2.0.8.5.1": {
       "projectPath": "F:\\sudytech\\webpluspro\\2.0.8.5.1",
-      "commitHash": "88482013",
+      "commitHash": "9974d57c",
       "sourceBaseDir": "F:\\sudytech\\webpluspro\\2.0.8.5.1\\02src\\target\\webpluspro-2.0.8.5.1",
-      "outputDir": "F:\\sudytech\\outClass\\fudan\\v2\\ROOT"
+      "outputDir": "F:\\sudytech\\outClass\\fudan\\v3\\ROOT"
     }
   } ,
   {
     "3.0.8": {
       "projectPath": "F:\\sudytech\\webpluspro\\3.0.8",
-      "commitHash": "02bd8cbc",
+      "commitHash": "1645214b",
       "sourceBaseDir": "F:\\sudytech\\webpluspro\\3.0.8\\02src\\target\\webpluspro-3.0.8",
-      "outputDir": "F:\\sudytech\\outClass\\safeCener\\v18\\ROOT"
+      "outputDir": "F:\\sudytech\\outClass\\safeCener\\v31\\ROOT"
+    }
+  },
+  {
+    "contenthub-server": {
+      "projectPath": "F:\\sudytech\\contenthub-server",
+      "commitHash": "d061dae0",
+      "sourceBaseDir": "F:\\sudytech\\contenthub-server\\02src\\target\\contenthub-server-1.0",
+      "outputDir": "F:\\sudytech\\outClass\\contenthub\\v30\\ROOT"
     }
   }
 ]

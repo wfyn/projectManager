@@ -69,6 +69,11 @@ public class GitRepository implements Serializable {
     private String generatedPath;
 
     /**
+     * 源文件路径（部署时默认使用）
+     */
+    private String sourcePath;
+
+    /**
      * 最后扫描时间
      */
     private LocalDateTime lastScanTime;

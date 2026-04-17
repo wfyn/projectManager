@@ -1,0 +1,95 @@
+{
+  "code": 200,
+  "data": {
+    "jobs": [
+      {
+        "id": "1889310",
+        "title": "北京学校",
+        "startTime": "2026-05-10 00:00",
+        "endTime": "",
+        "address": "北京市通州区",
+        "url": "https://mp.weixin.qq.com/s?__biz=MzAxMDA3MjIwMw==\u0026mid=2652159098\u0026idx=4\u0026sn=30750776baae70072129556cd6d5979a#rd"
+      },
+      {
+        "id": "1895998",
+        "title": "雅诗兰黛集团",
+        "startTime": "2026-05-01 00:00",
+        "endTime": "2026-05-15 00:00",
+        "url": "https://mp.weixin.qq.com/s?__biz=MzAxMDA3MjIwMw==\u0026mid=2652166896\u0026idx=2\u0026sn=c48245d5d76272d4f07b6ab1b62e1417#rd"
+      },
+      {
+        "id": "1888238",
+        "title": "杭银消费金融股份有限公司",
+        "startTime": "2026-04-30 00:00",
+        "endTime": "",
+        "address": "浙江省杭州市",
+        "url": "https://mp.weixin.qq.com/s?__biz=MzAxMDA3MjIwMw==\u0026mid=2652165628\u0026idx=1\u0026sn=8f2f5eee06d9b1a7d76647b7d68217f4#rd"
+      },
+      {
+        "id": "1888306",
+        "title": "中证鹏元资信评估股份有限公司",
+        "startTime": "2026-04-30 00:00",
+        "endTime": "",
+        "address": "广东省深圳市",
+        "url": "https://mp.weixin.qq.com/s?__biz=MzAxMDA3MjIwMw==\u0026mid=2652165528\u0026idx=2\u0026sn=b74c10cc294b678bbd71cb947eee50a5#rd"
+      },
+      {
+        "id": "1888237",
+        "title": "招商银行股份有限公司南昌分行",
+        "startTime": "2026-04-30 00:00",
+        "endTime": "",
+        "address": "江西省南昌市、江西省九江市等",
+        "url": "https://mp.weixin.qq.com/s?__biz=MzAxMDA3MjIwMw==\u0026mid=2652165628\u0026idx=1\u0026sn=8f2f5eee06d9b1a7d76647b7d68217f4#rd"
+      }
+    ],
+    "academicReports": [
+      {
+        "id": "1881821",
+        "title": "Supply Cut-off and Technology Upgrade",
+        "startTime": "2026-04-29 14:00:00",
+        "endTime": "",
+        "address": "协鑫楼108",
+        "mode": "线下",
+        "speaker": "魏航教授上海财经大学研究生院",
+        "url": "https://sme.nju.edu.cn/9d/14/c47266a826644/page.htm"
+      },
+      {
+        "id": "1940044",
+        "title": "支撑新质生产力发展的稀有金属资源",
+        "startTime": "2026-04-15 19:30:00",
+        "endTime": "",
+        "address": "南京大学\"暾学堂\"",
+        "speaker": "南京大学地球科学与工程学院二级教授、博士生导师、中国矿物岩石地球化学学会副理事长、国务院学位委员会学科评议组成员兼秘书长、国家\"关键金属\"重大研究计划秘书组组长王汝成",
+        "url": "http://slle.nju.edu.cn/txt/zbyg/20260409/i372316.html"
+      },
+      {
+        "id": "1883210",
+        "title": "支撑新质生产力发展的稀有金属资源",
+        "startTime": "2026-04-15 19:30:00",
+        "endTime": "",
+        "mode": "线上【微信视频号】",
+        "speaker": "王汝成",
+        "url": "https://es.nju.edu.cn/a7/49/c22458a829257/page.htm"
+      },
+      {
+        "id": "1937820",
+        "title": "支撑新质生产力发展的稀有金属资源",
+        "startTime": "2026-04-15 19:30:00",
+        "endTime": "",
+        "address": "南京大学\"暾学堂\"",
+        "speaker": "南京大学地球科学与工程学院二级教授、博士生导师、中国矿物岩石地球化学学会副理事长、国务院学位委员会学科评议组成员兼秘书长、国家\"关键金属\"重大研究计划秘书组组长王汝成",
+        "url": "http://slle.nju.edu.cn/txt/zbyg/20260409/i372316.html"
+      },
+      {
+        "id": "1915294",
+        "title": "Reliable Neurosymbolic Learning",
+        "startTime": "2026-04-15 16:00:00",
+        "endTime": "",
+        "address": "Zoom会议ID：85617519948",
+        "mode": "线上【Zoom】",
+        "speaker": "Emile van Krieken 博士后",
+        "url": "https://cs.nju.edu.cn/a7/f4/c1661a829428/page.htm"
+      }
+    ]
+  }
+}

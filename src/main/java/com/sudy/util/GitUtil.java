@@ -45,8 +45,13 @@ public class GitUtil {
             HistoryCommitVO currentCommit = null;
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith(" ")) {
-                    // 处理统计信息行（例如：" 2 files changed, 3 insertions(+)"）
+                line = line.trim();
+                if (line.isEmpty()) {
+                    continue;
+                }
+                
+                if (line.startsWith("files changed")) {
+                    // 处理统计信息行（例如："2 files changed, 3 insertions(+)"）
                     if (currentCommit != null) {
                         currentCommit.setFileChanges(parseFileChanges(line));
                         if (withFiles) {
@@ -55,7 +60,7 @@ public class GitUtil {
                             );
                         }
                     }
-                } else if (!line.trim().isEmpty()) {
+                } else {
                     // 处理提交信息行
                     String[] parts = line.split("\\|", 5);
                     if (parts.length == 5) {
@@ -69,6 +74,11 @@ public class GitUtil {
                     }
                 }
             }
+        } finally {
+            // 确保进程被销毁
+            if (process != null && process.isAlive()) {
+                process.destroyForcibly();
+            }
         }
 
         verifyProcessSuccess(process);
@@ -77,12 +87,19 @@ public class GitUtil {
 
     /**
      * 解析git shortstat输出的文件变更数量
-     * 示例输入：" 2 files changed, 3 insertions(+)"
+     * 示例输入："2 files changed, 3 insertions(+)"
      */
     private static int parseFileChanges(String statLine) {
+        // 提取数字部分
         String[] parts = statLine.split(" ");
-        if (parts.length > 1 && parts[1].equals("files")) {
-            return Integer.parseInt(parts[0].trim());
+        for (String part : parts) {
+            if (part.matches("\\d+")) {
+                try {
+                    return Integer.parseInt(part);
+                } catch (NumberFormatException e) {
+                    // 忽略解析错误，返回0
+                }
+            }
         }
         return 0;
     }
@@ -92,6 +109,10 @@ public class GitUtil {
      */
     public static List<String> getChangedFilesViaCLI(String repoPath, String commitHash)
             throws IOException, InterruptedException {
+        if (commitHash == null || commitHash.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
         ProcessBuilder pb = buildProcess(repoPath,
                 Arrays.asList("git", "show", "--pretty=format:", "--name-only", commitHash));
 
@@ -100,9 +121,15 @@ public class GitUtil {
 
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-            reader.lines()
-                    .filter(line -> !line.trim().isEmpty())
-                    .forEach(files::add);
+            files = reader.lines()
+                    .map(String::trim)
+                    .filter(line -> !line.isEmpty())
+                    .collect(Collectors.toList());
+        } finally {
+            // 确保进程被销毁
+            if (process != null && process.isAlive()) {
+                process.destroyForcibly();
+            }
         }
 
         verifyProcessSuccess(process);
