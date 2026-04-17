@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('任务详情')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar('tasks')}"></div>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <span class="topbar-title"><i class="bi bi-card-list me-2"></i>任务详情 <span class="text-muted fw-normal fs-6" id="taskIdLabel"></span></span>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-warning btn-sm d-none" id="retryBtn" onclick="retryTask()">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>重新执行
+            </button>
+            <a href="/tasks" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>返回列表
+            </a>
+        </div>
+    </div>
+    <div class="page-content">
+        <div id="loadingPlaceholder" class="text-center py-5 text-muted">
+            <i class="bi bi-arrow-repeat spin fs-3 d-block mb-2"></i>加载任务信息中…
+        </div>
+
+        <div id="taskContent" style="display:none">
+            <!-- 基本信息 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2"></i>基本信息
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="text-muted small mb-1">任务 ID</div>
+                            <div class="fw-bold" id="dId">-</div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="text-muted small mb-1">状态</div>
+                            <div id="dStatus">-</div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="text-muted small mb-1">创建时间</div>
+                            <div class="small" id="dCreatedAt">-</div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="text-muted small mb-1">处理时间</div>
+                            <div class="small" id="dProcessedAt">-</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="text-muted small mb-1">仓库路径</div>
+                            <code class="text-break" id="dRepoPath">-</code>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-1">源文件路径</div>
+                            <code id="dSourcePath">-</code>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-1">生成路径</div>
+                            <code id="dGeneratedPath">-</code>
+                        </div>
+                        <div class="col-12">
+                            <div class="text-muted small mb-1">Commit Hash</div>
+                            <span class="badge bg-secondary font-monospace" id="dCommitHash">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 错误信息（仅失败时显示） -->
+            <div class="card mb-4 border-danger d-none" id="errorCard">
+                <div class="card-header text-danger bg-danger bg-opacity-10">
+                    <i class="bi bi-exclamation-triangle me-2"></i>错误信息
+                </div>
+                <div class="card-body">
+                    <pre class="mb-0 text-danger small" id="dErrorInfo" style="white-space:pre-wrap;word-break:break-all"></pre>
+                </div>
+            </div>
+
+            <!-- 文件明细 -->
+            <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <span><i class="bi bi-files me-2"></i>文件明细</span>
+                    <span class="badge bg-primary" id="fileCount">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>文件类型</th>
+                                <th>源路径</th>
+                                <th>编译后路径</th>
+                            </tr>
+                            </thead>
+                            <tbody id="fileDetailTbody">
+                            <tr><td colspan="4" class="text-center py-4 text-muted">暂无文件明细</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; animation: spin 1s linear infinite; }
+    pre { background: #fef2f2; border-radius: 8px; padding: 12px; }
+</style>
+<script th:inline="javascript">
+    const taskId = /*[[${taskId}]]*/ null;
+    let taskStatus = '';
+
+    const STATUS_MAP = {
+        PENDING:   {label: '待处理', cls: 'badge-pending'},
+        RUNNING:   {label: '执行中', cls: 'badge-running'},
+        SUCCESS:   {label: '已完成', cls: 'badge-success'},
+        COMPLETED: {label: '已完成', cls: 'badge-success'},
+        FAILED:    {label: '失败',   cls: 'badge-failed'},
+        ERROR:     {label: '出错',   cls: 'badge-failed'},
+    };
+
+    function statusBadge(s) {
+        const info = STATUS_MAP[s?.toUpperCase()] || {label: s || '-', cls: 'badge-pending'};
+        return `<span class="badge-status ${info.cls}">${info.label}</span>`;
+    }
+
+    function fmtDate(v) {
+        if (!v) return '-';
+        return String(v).replace('T', ' ').slice(0, 19);
+    }
+
+    async function loadTask() {
+        try {
+            const res = await fetch(`/api/${taskId}`);
+            const json = await res.json();
+            const t = json.data;
+            if (!t) { showError('任务不存在'); return; }
+
+            taskStatus = (t.status || '').toUpperCase();
+            document.getElementById('taskIdLabel').textContent = `#${t.id}`;
+            document.getElementById('dId').textContent = `#${t.id}`;
+            document.getElementById('dStatus').innerHTML = statusBadge(t.status);
+            document.getElementById('dCreatedAt').textContent = fmtDate(t.createdAt);
+            document.getElementById('dProcessedAt').textContent = fmtDate(t.processedAt);
+            document.getElementById('dRepoPath').textContent = t.repoPath || '-';
+            document.getElementById('dSourcePath').textContent = t.sourcePath || '-';
+            document.getElementById('dGeneratedPath').textContent = t.generatedPath || '-';
+            document.getElementById('dCommitHash').textContent = t.commitHash || '-';
+
+            // 错误信息
+            if (t.errorInfo) {
+                document.getElementById('errorCard').classList.remove('d-none');
+                document.getElementById('dErrorInfo').textContent = t.errorInfo;
+            }
+
+            // 重试按钮
+            if (taskStatus !== 'RUNNING') {
+                document.getElementById('retryBtn').classList.remove('d-none');
+            }
+
+            // 文件明细
+            const details = t.fileDetails || [];
+            document.getElementById('fileCount').textContent = details.length;
+            if (details.length) {
+                document.getElementById('fileDetailTbody').innerHTML = details.map(d => `
+                    <tr>
+                        <td><small>#${d.id}</small></td>
+                        <td>${d.fileType ? `<span class="badge bg-info text-dark">${d.fileType}</span>` : '-'}</td>
+                        <td><code class="small text-break">${d.fileSourcePath || '-'}</code></td>
+                        <td><code class="small text-break">${d.fileCompiledPath || '-'}</code></td>
+                    </tr>`).join('');
+            }
+
+            document.getElementById('loadingPlaceholder').style.display = 'none';
+            document.getElementById('taskContent').style.display = '';
+
+            // 正在执行则自动刷新
+            if (taskStatus === 'RUNNING' || taskStatus === 'PENDING') {
+                setTimeout(loadTask, 5000);
+            }
+        } catch (e) {
+            showError('加载任务详情失败，请稍后重试');
+        }
+    }
+
+    function showError(msg) {
+        document.getElementById('loadingPlaceholder').innerHTML =
+            `<i class="bi bi-exclamation-circle text-danger fs-3 d-block mb-2"></i><span class="text-danger">${msg}</span>`;
+    }
+
+    async function retryTask() {
+        if (!confirm(`确认重新执行任务 #${taskId}？`)) return;
+        const btn = document.getElementById('retryBtn');
+        btn.disabled = true;
+        try {
+            const res = await fetch(`/api/${taskId}/retry`, {method: 'POST'});
+            const json = await res.json();
+            showToast(json.data || '任务已重新提交，正在执行…', 'success');
+            btn.classList.add('d-none');
+            setTimeout(loadTask, 1000);
+        } catch (e) {
+            showToast('操作失败', 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    loadTask();
+</script>
+</body>
+</html>

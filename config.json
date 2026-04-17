@@ -26,9 +26,9 @@
   {
     "contenthub-server": {
       "projectPath": "F:\\sudytech\\contenthub-server",
-      "commitHash": "d061dae0",
+      "commitHash": "482c2a48",
       "sourceBaseDir": "F:\\sudytech\\contenthub-server\\02src\\target\\contenthub-server-1.0",
-      "outputDir": "F:\\sudytech\\outClass\\contenthub\\v30\\ROOT"
+      "outputDir": "F:\\sudytech\\outClass\\contenthub\\v1\\ROOT"
     }
   }
 ]

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('仓库配置')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar('repositories')}"></div>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <span class="topbar-title" id="pageTitle">
+            <i class="bi bi-plus-circle me-2"></i>新增仓库
+        </span>
+        <a href="/repositories" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>返回列表
+        </a>
+    </div>
+    <div class="page-content">
+        <div class="row justify-content-center">
+            <div class="col-xl-7 col-lg-9">
+                <div class="card">
+                    <div class="card-header" id="formCardTitle">仓库信息</div>
+                    <div class="card-body">
+                        <form id="repoForm" novalidate>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">仓库名称 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="repoName" placeholder="如：my-project" required>
+                                    <div class="invalid-feedback">请输入仓库名称</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">默认分支</label>
+                                    <input type="text" class="form-control" id="branch" placeholder="main / master">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">本地仓库路径 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="repoPath" placeholder="如：D:/workspace/my-project" required>
+                                    <div class="form-text">服务器上代码仓库的绝对路径</div>
+                                    <div class="invalid-feedback">请输入本地仓库路径</div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">远程仓库 URL</label>
+                                    <input type="text" class="form-control" id="remoteUrl" placeholder="https://github.com/user/repo.git">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Webplus 版本</label>
+                                    <input type="text" class="form-control" id="webplusVersion" placeholder="如：1.2.0">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">部署包生成路径</label>
+                                    <input type="text" class="form-control" id="generatedPath" placeholder="如：D:/deploy/output">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">源文件路径</label>
+                                    <input type="text" class="form-control" id="sourcePath" placeholder="如：D:/repo/02src/target/webpluspro-1.0">
+                                    <div class="form-text">部署时默认使用的编译输出目录路径（发起部署时可覆盖）</div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">仓库描述</label>
+                                    <textarea class="form-control" id="description" rows="3" placeholder="简要描述该仓库的用途…"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary px-4" id="submitBtn">
+                                    <i class="bi bi-check2 me-1"></i><span id="submitText">保 存</span>
+                                </button>
+                                <a href="/repositories" class="btn btn-outline-secondary px-4">取 消</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<script th:inline="javascript">
+    const repoId = /*[[${repoId}]]*/ null;
+    const isEdit = repoId !== null;
+
+    if (isEdit) {
+        document.getElementById('pageTitle').innerHTML = '<i class="bi bi-pencil-square me-2"></i>编辑仓库';
+        document.getElementById('formCardTitle').textContent = '编辑仓库信息';
+        document.getElementById('submitText').textContent = '更新';
+        loadRepoDetail();
+    }
+
+    async function loadRepoDetail() {
+        try {
+            // 通过列表接口找到对应仓库（后端无单条查询接口，用搜索替代）
+            const res = await fetch('/api/repositories', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({page: 1, size: 100, keyword: ''})
+            });
+            const json = await res.json();
+            const repo = (json.data?.list || []).find(r => r.id == repoId);
+            if (repo) fillForm(repo);
+        } catch (e) {
+            showToast('加载仓库信息失败', 'error');
+        }
+    }
+
+    function fillForm(r) {
+        document.getElementById('repoName').value = r.repoName || '';
+        document.getElementById('branch').value = r.branch || '';
+        document.getElementById('repoPath').value = r.repoPath || '';
+        document.getElementById('remoteUrl').value = r.remoteUrl || '';
+        document.getElementById('webplusVersion').value = r.webplusVersion || '';
+        document.getElementById('generatedPath').value = r.generatedPath || '';
+        document.getElementById('sourcePath').value = r.sourcePath || '';
+        document.getElementById('description').value = r.description || '';
+    }
+
+    function getFormData() {
+        return {
+            id: isEdit ? repoId : undefined,
+            repoName: document.getElementById('repoName').value.trim(),
+            branch: document.getElementById('branch').value.trim(),
+            repoPath: document.getElementById('repoPath').value.trim(),
+            remoteUrl: document.getElementById('remoteUrl').value.trim(),
+            webplusVersion: document.getElementById('webplusVersion').value.trim(),
+            generatedPath: document.getElementById('generatedPath').value.trim(),
+            sourcePath: document.getElementById('sourcePath').value.trim(),
+            description: document.getElementById('description').value.trim()
+        };
+    }
+
+    document.getElementById('repoForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        if (!this.checkValidity()) { this.classList.add('was-validated'); return; }
+
+        const data = getFormData();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-arrow-repeat spin me-1"></i>保存中…';
+
+        try {
+            const url = isEdit ? '/api/updateRepo' : '/api/createRepo';
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const json = await res.json();
+            if (json.code === 0 || json.code === 200 || json.success || res.ok) {
+                showToast(isEdit ? '仓库更新成功' : '仓库创建成功', 'success');
+                setTimeout(() => location.href = '/repositories', 1200);
+            } else {
+                showToast(json.msg || '操作失败', 'error');
+            }
+        } catch (err) {
+            showToast('网络错误，请稍后重试', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="bi bi-check2 me-1"></i><span>${isEdit ? '更新' : '保 存'}</span>`;
+        }
+    });
+</script>
+<style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; animation: spin 1s linear infinite; }
+</style>
+</body>
+</html>

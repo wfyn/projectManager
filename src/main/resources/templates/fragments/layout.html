@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' - 项目管理平台'">项目管理平台</title>
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --sidebar-width: 220px;
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+        }
+        body { background: #f1f5f9; font-family: 'Segoe UI', sans-serif; }
+
+        /* ---- 侧边栏 ---- */
+        .sidebar {
+            position: fixed; top: 0; left: 0;
+            width: var(--sidebar-width); height: 100vh;
+            background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%);
+            display: flex; flex-direction: column;
+            z-index: 100; overflow-y: auto;
+        }
+        .sidebar-brand {
+            padding: 24px 20px 16px;
+            color: #f8fafc; font-size: 1.1rem; font-weight: 700;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+            text-decoration: none; display: block;
+        }
+        .sidebar-brand i { color: var(--primary); margin-right: 8px; }
+        .sidebar-menu { padding: 12px 0; flex: 1; }
+        .sidebar-section {
+            padding: 6px 20px 4px;
+            font-size: .68rem; letter-spacing: .08em;
+            color: #64748b; text-transform: uppercase;
+        }
+        .sidebar-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 20px; color: #94a3b8;
+            text-decoration: none; font-size: .875rem;
+            border-left: 3px solid transparent;
+            transition: all .2s;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            color: #f8fafc;
+            background: rgba(255,255,255,.06);
+            border-left-color: var(--primary);
+        }
+        .sidebar-link i { font-size: 1rem; width: 18px; text-align: center; }
+
+        /* ---- 内容区 ---- */
+        .main-wrap {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+        }
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 14px 28px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .topbar-title { font-size: 1.05rem; font-weight: 600; color: #1e293b; }
+        .page-content { padding: 24px 28px; flex: 1; }
+
+        /* ---- 通用卡片 ---- */
+        .card { border: none; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+        .card-header {
+            background: #fff; border-bottom: 1px solid #f1f5f9;
+            padding: 16px 20px; font-weight: 600; border-radius: 12px 12px 0 0 !important;
+        }
+
+        /* ---- 状态徽章 ---- */
+        .badge-pending  { background:#fef3c7; color:#92400e; }
+        .badge-running  { background:#dbeafe; color:#1e40af; }
+        .badge-success  { background:#d1fae5; color:#065f46; }
+        .badge-failed   { background:#fee2e2; color:#991b1b; }
+        .badge-status {
+            padding: 3px 10px; border-radius: 20px;
+            font-size: .75rem; font-weight: 600;
+        }
+
+        /* ---- 表格 ---- */
+        .table th { font-size: .8rem; color: #64748b; text-transform: uppercase; font-weight: 600; }
+        .table td { vertical-align: middle; font-size: .875rem; }
+        .table-hover tbody tr:hover { background: #f8fafc; }
+
+        /* ---- 按钮 ---- */
+        .btn-primary { background: var(--primary); border-color: var(--primary); }
+        .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+
+        /* Toast 通知 */
+        #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 280px; }
+    </style>
+</head>
+
+<!-- 侧边栏片段 -->
+<nav class="sidebar" th:fragment="sidebar(active)">
+    <a class="sidebar-brand" href="/">
+        <i class="bi bi-layers-fill"></i>项目管理平台
+    </a>
+    <div class="sidebar-menu">
+        <div class="sidebar-section">仓库管理</div>
+        <a class="sidebar-link" th:classappend="${active == 'repositories'} ? 'active'" href="/repositories">
+            <i class="bi bi-git"></i> Git 仓库
+        </a>
+        <div class="sidebar-section">部署任务</div>
+        <a class="sidebar-link" th:classappend="${active == 'tasks'} ? 'active'" href="/tasks">
+            <i class="bi bi-list-task"></i> 任务列表
+        </a>
+    </div>
+</nav>
+
+<!-- Toast 脚本片段 -->
+<div th:fragment="scripts">
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <div id="toastContainer"></div>
+    <script>
+        function showToast(msg, type = 'success') {
+            const colors = { success: '#10b981', error: '#ef4444', info: '#3b82f6' };
+            const div = document.createElement('div');
+            div.style.cssText = `background:${colors[type]||colors.info};color:#fff;padding:12px 18px;border-radius:8px;margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);font-size:.875rem;animation:fadeIn .3s`;
+            div.textContent = msg;
+            document.getElementById('toastContainer').appendChild(div);
+            setTimeout(() => div.remove(), 3500);
+        }
+        const style = document.createElement('style');
+        style.textContent = '@keyframes fadeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}';
+        document.head.appendChild(style);
+    </script>
+</div>
+
+</html>

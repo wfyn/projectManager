@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('提交历史')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: sidebar('repositories')}"></div>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <span class="topbar-title"><i class="bi bi-clock-history me-2"></i>提交历史</span>
+        <a href="/repositories" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>返回仓库列表
+        </a>
+    </div>
+    <div class="page-content">
+
+        <!-- 仓库信息卡片 -->
+        <div class="card mb-4" id="repoInfoCard" style="display:none!important">
+            <div class="card-body py-3">
+                <div class="row g-2">
+                    <div class="col-auto">
+                        <span class="text-muted small">仓库名称：</span>
+                        <strong id="infoRepoName">-</strong>
+                    </div>
+                    <div class="col-auto">
+                        <span class="text-muted small ms-3">分支：</span>
+                        <span class="badge bg-secondary" id="infoBranch">-</span>
+                    </div>
+                    <div class="col-auto">
+                        <span class="text-muted small ms-3">本地路径：</span>
+                        <code class="small" id="infoPath">-</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 发起部署提示 -->
+        <div class="alert alert-info d-flex align-items-center gap-2 mb-4" role="alert">
+            <i class="bi bi-info-circle-fill fs-5"></i>
+            <div>选择一条提交记录，点击 <strong>发起部署</strong> 即可基于该 commit 创建处理任务。</div>
+        </div>
+
+        <!-- 提交列表 -->
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-git me-2"></i>最近 10 条提交</span>
+                <button class="btn btn-sm btn-outline-primary" onclick="loadCommits()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>刷新
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div id="commitList" class="p-3">
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-arrow-repeat spin me-1"></i>加载提交历史中…
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 发起部署弹框 -->
+<div class="modal fade" id="deployModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-rocket me-2"></i>发起部署任务</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-secondary mb-3" id="deployCommitInfo"></div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">源文件路径 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="dSourcePath" placeholder="如：D:/repo/02src/target/webpluspro-1.0">
+                        <div class="form-text">编译输出目录（已预填仓库默认值，可手动修改）</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">生成路径 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="dGeneratedPath" placeholder="部署包输出路径，如：D:/deploy/output">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
+                <button class="btn btn-primary" id="deployConfirmBtn" onclick="submitDeploy()">
+                    <i class="bi bi-rocket me-1"></i>确认发起
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; animation: spin 1s linear infinite; }
+
+    .commit-card {
+        border: 1px solid #e2e8f0; border-radius: 10px;
+        padding: 14px 18px; margin-bottom: 12px;
+        background: #fff; transition: box-shadow .2s;
+    }
+    .commit-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,.08); }
+    .commit-hash { font-family: monospace; font-size: .8rem; background:#f1f5f9; padding:2px 7px; border-radius:4px; color:#475569; }
+    .commit-msg { font-weight: 600; color: #1e293b; margin-bottom: 4px; }
+    .commit-meta { font-size: .8rem; color: #64748b; }
+    .file-change-badge { background:#e0f2fe; color:#0369a1; font-size:.75rem; padding:2px 8px; border-radius:4px; }
+</style>
+<script th:inline="javascript">
+    const repoId = /*[[${repoId}]]*/ null;
+    let currentCommit = null, repoPath = '', repoGeneratedPath = '', repoSourcePath = '';
+
+    async function loadRepoInfo() {
+        try {
+            const res = await fetch('/api/repositories', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({page: 1, size: 100, keyword: ''})
+            });
+            const json = await res.json();
+            const repo = (json.data?.list || []).find(r => r.id == repoId);
+            if (repo) {
+                repoPath = repo.repoPath || '';
+                repoGeneratedPath = repo.generatedPath || '';
+                repoSourcePath = repo.sourcePath || '';
+                document.getElementById('infoRepoName').textContent = repo.repoName || '-';
+                document.getElementById('infoBranch').textContent = repo.branch || 'main';
+                document.getElementById('infoPath').textContent = repo.repoPath || '-';
+                document.getElementById('repoInfoCard').style.display = '';
+                // 预填生成路径和源文件路径
+                document.getElementById('dGeneratedPath').value = repoGeneratedPath;
+                document.getElementById('dSourcePath').value = repoSourcePath;
+            }
+        } catch (e) { /* 忽略 */ }
+    }
+
+    async function loadCommits() {
+        const container = document.getElementById('commitList');
+        container.innerHTML = `<div class="text-center py-4 text-muted"><i class="bi bi-arrow-repeat spin me-1"></i>加载提交历史中…</div>`;
+        try {
+            const res = await fetch(`/api/getHistoryList/${repoId}`, {method: 'POST'});
+            const json = await res.json();
+            const list = json.data || [];
+            if (!list.length) {
+                container.innerHTML = `<div class="text-center py-5 text-muted"><i class="bi bi-inbox fs-3 d-block mb-2"></i>暂无提交记录</div>`;
+                return;
+            }
+            container.innerHTML = list.map((c, idx) => `
+                <div class="commit-card">
+                    <div class="d-flex align-items-start justify-content-between gap-2">
+                        <div class="flex-1">
+                            <div class="commit-msg">${escHtml(c.commitMessage || '')}</div>
+                            <div class="commit-meta d-flex flex-wrap gap-3 mt-1">
+                                <span><i class="bi bi-code-slash me-1"></i><span class="commit-hash">${c.shortHash || c.commitHash?.slice(0,7) || '-'}</span></span>
+                                <span><i class="bi bi-person me-1"></i>${escHtml(c.commitAuthor || '-')}</span>
+                                <span><i class="bi bi-calendar3 me-1"></i>${c.commitTime ? c.commitTime.replace('T',' ') : '-'}</span>
+                                <span class="file-change-badge"><i class="bi bi-files me-1"></i>${c.fileChanges} 个文件变更</span>
+                            </div>
+                            ${c.changedFiles?.length ? `
+                            <div class="mt-2">
+                                <a class="text-muted small" data-bs-toggle="collapse" href="#files_${idx}" role="button">
+                                    <i class="bi bi-chevron-down me-1"></i>查看变更文件
+                                </a>
+                                <div class="collapse mt-1" id="files_${idx}">
+                                    <ul class="list-unstyled mb-0 ps-3">
+                                        ${c.changedFiles.slice(0,20).map(f => `<li class="small text-secondary"><i class="bi bi-file-earmark me-1"></i>${escHtml(f)}</li>`).join('')}
+                                        ${c.changedFiles.length > 20 ? `<li class="small text-muted">…还有 ${c.changedFiles.length - 20} 个文件</li>` : ''}
+                                    </ul>
+                                </div>
+                            </div>` : ''}
+                        </div>
+                        <button class="btn btn-sm btn-primary flex-shrink-0"
+                                onclick="openDeploy('${escHtml(c.commitHash)}','${escHtml(c.shortHash || c.commitHash?.slice(0,7))}','${escHtml(c.commitMessage?.replace(/'/g,"\\'"))}')">
+                            <i class="bi bi-rocket me-1"></i>发起部署
+                        </button>
+                    </div>
+                </div>`).join('');
+        } catch (e) {
+            container.innerHTML = `<div class="text-center py-4 text-danger"><i class="bi bi-exclamation-circle me-1"></i>加载失败，请稍后重试</div>`;
+        }
+    }
+
+    function openDeploy(hash, shortHash, msg) {
+        currentCommit = hash;
+        document.getElementById('deployCommitInfo').innerHTML =
+            `<i class="bi bi-git me-2"></i><strong>${escHtml(msg)}</strong> &nbsp;<span class="commit-hash">${shortHash}</span>`;
+        // 预填源文件路径和生成路径（仓库默认值，可手动覆盖）
+        document.getElementById('dSourcePath').value = repoSourcePath;
+        document.getElementById('dGeneratedPath').value = repoGeneratedPath;
+        new bootstrap.Modal(document.getElementById('deployModal')).show();
+    }
+
+    async function submitDeploy() {
+        const sourcePath = document.getElementById('dSourcePath').value.trim();
+        const generatedPath = document.getElementById('dGeneratedPath').value.trim();
+        if (!sourcePath || !generatedPath) { showToast('请填写源文件路径和生成路径', 'error'); return; }
+
+        const btn = document.getElementById('deployConfirmBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-arrow-repeat spin me-1"></i>提交中…';
+
+        try {
+            const res = await fetch('/api/create', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    repoId: String(repoId),
+                    repoPath,
+                    sourcePath,
+                    commitHash: currentCommit,
+                    generatedPath
+                })
+            });
+            const json = await res.json();
+            if (json.code === 0 || json.code === 200 || json.success || res.ok) {
+                showToast('部署任务已创建，正在执行…', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('deployModal')).hide();
+                setTimeout(() => location.href = '/tasks', 1500);
+            } else {
+                showToast(json.msg || '创建失败', 'error');
+            }
+        } catch (err) {
+            showToast('网络错误，请稍后重试', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-rocket me-1"></i>确认发起';
+        }
+    }
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    loadRepoInfo();
+    loadCommits();
+</script>
+</body>
+</html>
