@@ -46,5 +46,13 @@
       "sourceBaseDir": "F:\\sudytech\\webpluspro\\3.0.8\\02src\\target\\webpluspro-3.0.8.1",
       "outputDir": "F:\\sudytech\\outClass\\mnews\\v1\\ROOT"
     }
+  },
+  {
+    "fudanyuan": {
+      "projectPath": "F:\\sudytech\\subscribe-webplus",
+      "commitHash": "33561515",
+      "sourceBaseDir": "F:\\sudytech\\subscribe-webplus\\02src\\target\\subscribe-fudan-1.0",
+      "outputDir": "F:\\sudytech\\outClass\\fudanyuan\\v1\\ROOT"
+    }
   }
 ]
