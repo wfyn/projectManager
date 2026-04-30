@@ -30,5 +30,21 @@
       "sourceBaseDir": "F:\\sudytech\\contenthub-server\\02src\\target\\contenthub-server-1.0",
       "outputDir": "F:\\sudytech\\outClass\\contenthub\\v1\\ROOT"
     }
+  },
+  {
+    "2.0.4": {
+      "projectPath": "F:\\sudytech\\webpluspro\\2.0.4",
+      "commitHash": "7c7aac1c",
+      "sourceBaseDir": "F:\\sudytech\\webpluspro\\2.0.4\\02src\\target\\webpluspro-2.0.4",
+      "outputDir": "F:\\sudytech\\outClass\\pushNats\\v1\\ROOT"
+    }
+  },
+  {
+    "3.0.8.1": {
+      "projectPath": "F:\\sudytech\\webpluspro\\3.0.8",
+      "commitHash": "6a1d1419",
+      "sourceBaseDir": "F:\\sudytech\\webpluspro\\3.0.8\\02src\\target\\webpluspro-3.0.8.1",
+      "outputDir": "F:\\sudytech\\outClass\\mnews\\v1\\ROOT"
+    }
   }
 ]

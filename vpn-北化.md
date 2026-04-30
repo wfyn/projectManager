@@ -35,12 +35,12 @@
 | `121.195.132.9` | yough | `wz01!QAZ#Buct` / `js05!QAZ#Buct` |
 
 ## 运维命令
-
+curl --location --request POST 'http://10.20.1.113:31144/v1/mgr/article/del' --header 'Content-Type: application/json' --data '{
 **删除记录**
 ```bash
-curl --location --request POST 'http://121.195.149.8:31144/v1/mgr/article/del' \
+curl --location --request POST 'http://10.20.1.113:31144/v1/mgr/article/del' \
 --header 'Content-Type: application/json' \
 --data '{
-    "resType": "teacherHome"
+    "resType": "application"
 }'
 ```
