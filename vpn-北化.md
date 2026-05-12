@@ -41,6 +41,6 @@ curl --location --request POST 'http://10.20.1.113:31144/v1/mgr/article/del' --h
 curl --location --request POST 'http://10.20.1.113:31144/v1/mgr/article/del' \
 --header 'Content-Type: application/json' \
 --data '{
-    "resType": "application"
+    "resType": "regulation"
 }'
 ```

@@ -21,3 +21,8 @@
 | 密码 | `kz$2dru4CC12` |
 | 服务器密码 | `ubuntu/nju@12345` |
 | 提权 | `sudo su`（输入 ubuntu 用户密码） |
+
+
+https://search.nju.edu.cn/#?keyword=&searchType=zh
+20251201221
+Sudy@12344
