@@ -2,9 +2,9 @@
   {
     "5.0.1.5": {
       "projectPath": "F:\\sudytech\\webpluspro\\5.0.1.5",
-      "commitHash": "4419b492",
+      "commitHash": "9a60a134",
       "sourceBaseDir": "F:\\sudytech\\webpluspro\\5.0.1.5\\02src\\target\\webpluspro-5.0.1.5",
-      "outputDir": "F:\\sudytech\\outClass\\zju\\v4\\ROOT"
+      "outputDir": "F:\\sudytech\\outClass\\zju\\v7\\ROOT"
     }
   },
   {
@@ -42,9 +42,9 @@
   {
     "3.0.8.1": {
       "projectPath": "F:\\sudytech\\webpluspro\\3.0.8",
-      "commitHash": "e5a136cc",
+      "commitHash": "6d2a99c2",
       "sourceBaseDir": "F:\\sudytech\\webpluspro\\3.0.8\\02src\\target\\webpluspro-3.0.8.1",
-      "outputDir": "F:\\sudytech\\outClass\\fgxwj\\v2\\ROOT"
+      "outputDir": "F:\\sudytech\\outClass\\fgxwj\\v5\\ROOT"
     }
   },
   {
@@ -53,6 +53,21 @@
       "commitHash": "33561515",
       "sourceBaseDir": "F:\\sudytech\\subscribe-webplus\\02src\\target\\subscribe-fudan-1.0",
       "outputDir": "F:\\sudytech\\outClass\\fudanyuan\\v1\\ROOT"
+    }
+  },
+  {
+    "daming": {
+      "projectPath": "F:\\sudytech\\webpluspro\\3.0.7.8.1",
+      "commitHash": "aadc2ed9",
+      "sourceBaseDir": "F:\\sudytech\\webpluspro\\3.0.7.8.1\\02src\\target\\webpluspro-3.0.7.8.1",
+      "outputDir": "F:\\sudytech\\outClass\\dmmm\\v1\\ROOT"
+    }
+  } , {
+    "3.0.7.6": {
+      "projectPath": "F:\\sudytech\\webpluspro\\3.0.7.6",
+      "commitHash": "99058f99",
+      "sourceBaseDir": "F:\\sudytech\\webpluspro\\3.0.7.6\\02src\\target\\webpluspro-3.0.7.6",
+      "outputDir": "F:\\sudytech\\outClass\\3.0.7.6\\v1\\ROOT"
     }
   }
 ]
